@@ -2,7 +2,7 @@ package ru.hse.bigdata.researchseminar
 
 import org.apache.spark.sql.SparkSession
 import ru.hse.bigdata.researchseminar.entities.Tweet
-import ru.hse.bigdata.researchseminar.extractors.{Extractor, TopActiveUsersByPosts, TopActiveUsersByReTweets, TopHashTags}
+import ru.hse.bigdata.researchseminar.extractors._
 
 object HW02 {
   def buildSparkSession(appName: String): SparkSession = {
@@ -11,7 +11,6 @@ object HW02 {
       .master("local[2]")
       .config("spark.sql.warehouse.dir", "./target")
       .config("spark.ui.enabled", "false")
-      .config("spark.sql.catalogImplementation", "in-memory")
       .config("spark.driver.host", "localhost")
       .appName(appName)
       .getOrCreate()
@@ -24,7 +23,8 @@ object HW02 {
   def extractors: Seq[Extractor] = Seq(
     TopHashTags,
     TopActiveUsersByPosts,
-    TopActiveUsersByReTweets
+    TopActiveUsersByReTweets,
+    TweetConverter
   )
 
   def main(args: Array[String]): Unit = {
@@ -41,6 +41,8 @@ object HW02 {
 
     val tweets = session.read.json(sourceFilePath).as[Tweet]
 
-    extractors.foreach(ex => ex.saveFeatures(tweets, s"${targetFilePath}_${ex.postfix}")(session.implicits))
+    extractors
+      .foreach(ex => ex.saveFeatures(tweets,
+        s"${targetFilePath}_${ex.postfix}")(session.implicits))
   }
 }
