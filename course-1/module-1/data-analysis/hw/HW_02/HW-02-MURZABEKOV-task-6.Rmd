@@ -1,0 +1,102 @@
+---
+title: "Home assignment 02: Data analysis Task 6"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis Task 6
+
+### 6 Assignment on Clustering
+Get the built-in data with at least 4 quantitative (continuous) variables.
+
+
+```{r}
+library(FactoMineR)
+data(USArrests)
+```
+
+
+The USArrests data set contains statistics, in arrests per 100,000 residents for assault, murder, and rape in each of the 50 US states in 1973. Also given is the percent of the population living in urban areas. The dataset contains 4 variables: 
+- Murder	numeric	Murder arrests (per 100,000)
+- Assault	numeric	Assault arrests (per 100,000)
+- UrbanPop	numeric	Percent urban population
+- Rape	    numeric	Rape arrests (per 100,000)
+
+
+```{r}
+USArrests
+```
+
+
+1. Do the hierarchical clustering (preceded by the PCA) using command HCPC from FactoMineR package:
+    (a) Clearly name the recommended (by HCPC) clusters.
+
+```{r}
+    library(FactoMineR)
+    library(factoextra)
+    
+    res_pca = PCA(USArrests, graph = FALSE)
+    res.hcpc = HCPC(res_pca, nb.clust = 4)
+```
+```{r}
+
+library(factoextra)
+
+fviz_dend(res.hcpc, 
+          cex = 0.7,                     # Label size
+          palette = "jco",               # Color palette see ?ggpubr::ggpar
+          rect = TRUE,
+          rect_fill = TRUE, # Add rectangle around groups
+          rect_border = "jco",           # Rectangle color
+          labels_track_height = 0.8      # Augment the room for labels
+          )
+```
+    
+    (b) Explain the meaning of the barplot in the upper-right corner of the output.
+    
+The height of the bar-plot defines the distance between two points in multi-dimention plane. Because we have multi-dimentional dataset, for reducing the dimentions PCA method used as well. 
+    
+2. Perform the K-means clustering, choosing K according to the results of hierarchical clustering.
+
+
+```{r}
+library(factoextra)
+
+set.seed(99)
+
+input <- na.omit(USArrests)
+
+km_res = kmeans(input, centers = 4, nstart = 20)
+km_res
+```
+
+    (a) Plot the results
+    
+```{r}
+library(cluster)
+library(fpc)
+
+plot_data = cbind(input, cluster = km_res$cluster)
+
+plotcluster(plot_data, km_res$cluster)
+
+clusplot(plot_data, km_res$cluster, color = TRUE, shade = TRUE, lines = 100)
+```
+    
+    (b) Compare distribution of points over clusters with that of hierarchical approach
+```{r}
+hc_complete = hclust(dist(input), method="complete")
+
+plot(hc_complete ,main="Violent Crime Rates by US State ", xlab="", sub="", cex=.9)
+```
+
+
+
+
+
+
+
+
+
+
+
+

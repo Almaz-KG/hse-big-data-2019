@@ -1,0 +1,84 @@
+---
+title: "Home assignment 02: Data analysis Task 5"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis Task 5
+
+### 5. Assignment on Multidimensional Scaling
+
+Get the distances between 10-12 Russian cities. For example, you can retrieve this information at
+https://www.avtodispetcher.ru/distance/table/c172-rossiya/
+
+1. Do the classical multidimensional scaling using command cmdscale from MVA package:
+
+    (a) Plot a two-dimensional MDS configuration representing the cities. Compare the result with the actual geographical location of the cities across the country.
+    
+```{r}
+russian_cities = read.csv("data/t5/russian_cities_prepared.csv")
+
+head(russian_cities)
+```
+
+```{r}
+dx = dist(russian_cities)
+dx
+```
+    
+```{r}
+library(MVA)
+
+reconstructed_x = cmdscale(dx)
+
+plot(reconstructed_x, col="white")
+text(reconstructed_x, labels = russian_cities[,1], cex= 0.7)
+```
+
+I can't explain this plot. Maybe I have uncorrect distances between cities.
+
+```{r}
+reconstructed_x
+```
+
+    (b) Based on the computed eigenvalues, discuss the quality of representation in the 2D space.
+
+```{r}
+dist(reconstructed_x)
+```
+```{r}
+dx
+```
+
+In this block above we mapped 12 dimentional points (each point present one Russian city and distances between this city and other cities) into 2 dimentional dataset. As I know any dimention scaling producess loss data quality. In this example, we can see the diffences between scaled data and the real data: (1, 2) in scaled dataset distance between city 1 and city 2 is 1699.92 and in the real dataset the distance is 10803. This diffence result of scaling, and we scale into 12 dimention (the max-dimentions of dataset) we should see little diffences in distances
+
+    
+    (c) Plot the Shepard diagram and discuss it.
+    
+```{r}
+reconstructed_x
+```
+    
+    
+```{r}
+dist(dx)
+```
+    
+    
+```{r}
+
+library(optiscale)
+
+shep.plot(x.quant = reconstructed_x[, 1], os.data = reconstructed_x[, 2], 
+          main.title = "Shepard diagram for Russsian cities distances")
+```
+    
+    
+    (d) Check whether the MDS configuration you obtained does restore the original distances in a sufficiently high dimensional space.
+```{r}
+lam = reconstructed_x$eig
+cumsum(abs(lam)) / sum(abs(lam))
+cumsum(lam^2) / sum(lam^2)
+```
+
+
+

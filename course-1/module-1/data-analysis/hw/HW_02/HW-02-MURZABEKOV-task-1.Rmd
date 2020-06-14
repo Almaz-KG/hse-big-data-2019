@@ -1,0 +1,241 @@
+---
+title: "Home assignment 02: Data analysis Task 1"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis Task 1
+
+
+### 1 Assignment on Confidence Intervals and Hypothesis Testing
+
+
+    1. Get a univariate dataset from sources 1 or 2 and briefly describe it. Using these data,
+
+For this task I picked up stock prices of largest bank in Eustern Europe: Sberbank (SBER) from Moscow Exchange (MOEX). This datasets contains 9 columns and 192 rows (observations), each row in dataset describes the stock data (i.e. ticker, prices, volume, date, etc) for one day from 2019 January 3th till 2019 October 04.
+
+```{r}
+sber_stock_price = read.csv("data/t1/SBER.csv", header = TRUE, stringsAsFactors = FALSE)
+
+summary(sber_stock_price)
+```
+
+#### (a) Obtain a 97% confidence interval for the population mean.
+
+Let's obtain a 97% confidence interval for the price changes for each day of Sberbank's stock prices. I suppouse that the price changes have   random values for each day. So, to calculate the price changes we just need to calculate the difference between OPEN_PRICE and CLOSE_PRICE
+
+```{r echo=TRUE, paged.print=TRUE}
+sber_close_prices_full = sber_stock_price$CLOSE - sber_stock_price$OPEN
+
+sber_close_prices = sample(sber_close_prices_full, 100)
+
+t.test(sber_close_prices, conf.level = 0.97)
+```
+   
+So, in the result above we can clearify that 97% confidence interval for the sample day prices change between -0.3491 and 0.9823
+    
+    
+##### (b) Perform a t-test on whether the population mean is equal to the sample median. Clearly state the null and alternative hypotheses, provide the p-value.
+
+```{r}
+median(sber_close_prices)
+```
+
+Let's settle two hypothesis:
+H0: mu  = 0.53 the population mean is equal to the sample median
+H1: mu != 0.53 the population mean is not equal to the sample median
+and the level of significance is equal to a = .05 
+
+```{r echo=TRUE, paged.print=TRUE}
+t.test(sber_close_prices, mu = 0.53, alt = "two.sided")
+```
+How to interpretite this result?
+So, as p-value (0.482) > a (0.05) we fail to reject H0 and conclude that there is no sufficient evidence that the mean number of each Sberbank's close prices is not equal to 0.53
+
+
+##### (c) Obtain a 95% confidence interval for the population standard deviation.
+```{r}
+n = length(sber_close_prices)
+a = 0.05
+variance = var(sber_close_prices)
+
+lstar = qchisq(a / 2, df = n - 1)
+rstar = qchisq(1 - a / 2, df = n - 1)
+
+coeff = (n - 1) * c(1 / rstar, 1 / lstar)
+coeff_sqrt = sqrt((n - 1) * c(1 / rstar, 1 / lstar))
+
+coeff_sqrt
+```
+
+The standard deviation for sber_close_prices between 0.8780₽ and 1.1616₽
+
+##### (d) Find some dataset with a categorical variable. For that variable, compute the proportion of some level. Obtain a 99% confidence interval for that proportion.
+
+Unfornutelly, sberbank_stock_prices have'not any categorical field. So, I decided create categorical field by some simple logic: 
+NEW_FIELD = if (day_price_delta > 0) UP else DOWN
+
+Now, lets calculate this field:
+```{r}
+sber_up_down_variables = ifelse(sber_close_prices_full > 0, TRUE, FALSE)
+length(sber_up_down_variables)
+length(sber_up_down_variables[sber_up_down_variables == TRUE])
+length(sber_up_down_variables[sber_up_down_variables == FALSE])
+```
+So, we have 100 observations (i.e. traded days) and in 97 days were price UP days, and 95 days are price DOWN.
+
+```{r}
+sber_up_down_prices_sample = sample(sber_up_down_variables,  100)
+mean(sber_up_down_prices_sample)
+```
+
+```{r}
+prop.test(48, 100, conf.level=0.99)
+``` 
+So, the 95% Confidence Interval of the population standard deviation is:
+(0.3519; 0.6106)
+
+##### (e) Perform a hypothesis test on whether the population proportion is equal to 1/2. Clearly state the null and alternative hypotheses, provide the p-value.
+
+In this part I wanna check that DOWN AND UP day groups in this dataset presents with proporition 1:2 (that means there are twice more days with UP prices: (paradise for traders and investors :), of couse it is not true)
+
+H0: p = 0.33 the population proportion of DOWN days are 33%
+H1: p > 0.33 the population proportion of DOWN days are greater that 33%
+x = 48 in the sample
+
+```{r}
+prop.test(x = 48, n = 100, p = .33, alt = "greater")
+```
+As I expected, according with EMH, proption for DOWN days are greather 33%, so we might to discover the H1
+
+##### (f) Come up with some data for calculating the confidence intervals between proportions of two populations (in fact, you need just four numbers). Obtain a 99% confidence interval for the difference between proportions.
+
+For this part I will take the monthly performances (in percent) by IMOEX and SBER for several months (Note: this performances are not real, just random numbers)
+
+```{r}
+imoex_perf = c(8.10, 3.54, 6.17,  0.23, -4.12, 2.98)
+sber_perf  = c(12.7, 4.80, 3.42, -1.56, -6.89, 3.23)
+
+t.test(imoex_perf, sber_perf, var.equal = TRUE, conf.level = 0.99)
+```
+Hm... The differences between two financial instrument are between -9.9844 and +10.3844
+
+##### (g) Perform an appropriate hypothesis test for the difference between proportions (perhaps, using imaginary data). Draw a conclusion.
+
+We know the correlation between sberbank stocks (SBER) and Index of Moscow Exchange (IMOEX) is ~0.67. So, using this observation we can propose hypothesis that 67% of each day performance of SBER and 60% of IMOEX are equal (I know this is a stupid hypothesis, btw why not?!)
+
+H0: PS – PI = 0 (the two proportions are equal)
+H1: PS – PI ≠ 0 (there is a significant difference between proportions)
+
+```{r}
+prop.test(c(192 * 0.67, 192 * 0.60), c(192, 192), alt = "less")
+```
+
+We fail to reject H0 since p-value = 0.9064 > 0.05 (setted by default) and conclude that with 95% confidence there is no significant difference between the proportions
+    
+    2. Pick the time series of log returns (make sure you understand what this means) on three securities or commodities from data sources 1. Use getSymbols command to download the data and:
+
+The same dataset (SBER) was choosen as well for this part of the work assignment, and also I picked up the prices of stock GAZP (Gazprom) and prices of Index of Moscow Exchange (IMOEX)  
+    
+##### (a) Perform the Jarque-Bera for normality. State clearly the null and alternative hypothesis.
+
+There are the same logic for preporation dataset (Just technical moment)
+
+```{r}
+sber_stock_prices_full = read.csv("data/t1/SBER.csv", header = TRUE, stringsAsFactors = FALSE)
+gazp_stock_prices_full = read.csv("data/t1/GAZP.csv", header = TRUE, stringsAsFactors = FALSE)
+imoex_prices_full = read.csv("data/t1/IMOEX.csv", header = TRUE, stringsAsFactors = FALSE)
+
+sber_close_prices_full = sber_stock_prices_full$CLOSE - sber_stock_prices_full$OPEN
+gazp_close_prices_full = gazp_stock_prices_full$CLOSE - gazp_stock_prices_full$OPEN
+imoex_close_prices_full = imoex_prices_full$CLOSE - imoex_prices_full$OPEN
+```
+
+
+```{r}
+library(tseries)
+
+jarque.bera.test(sber_close_prices_full)
+jarque.bera.test(gazp_close_prices_full)
+jarque.bera.test(imoex_close_prices_full)
+```
+
+How to interpret this result? Especially Jarque Bera Test for GAZP prices?
+
+I'm not totally sure, but as I understood there very small value of p-value of GAZP financial institution means we should reject the null hypothesis, also it means the ditributions of each day price deltas are not normal. 
+
+Note: The EMH declares the distribution of each day price changes of any fin instrument are normal (or log-normal) in efficient market. Is it correct to say: The Russian Stock market has an fin instrument like GAZP that not not efficient in terms of EMH?
+
+##### (b) Check whether the (univariate) empirical distribution of log returns for each stock is normal by examining the QQ-plot. Use the command qqPlot() from car package instead of the built-in function. Discuss whether the observations are within the confidence interval.
+```{r}
+library(car)
+
+qqPlot(sber_close_prices_full)
+qqPlot(gazp_close_prices_full)
+qqPlot(imoex_close_prices_full)
+
+```
+
+So, plots look pretty good and the distrubutions are normal?! Except the distibution of GAZP.
+
+For GAZP's plot I have a strange graph, that means the distribution of day deltas is not seems like normal distribution. So, if we draw simple histrogram we should see the some skeweness left or right. 
+
+```{r}
+hist(gazp_close_prices_full)
+```
+
+Yes, in this chart above we have strong left-skeweness, with wide tailedness.
+
+
+    3. Use a built-in set from 2 to perform the χ2-test for homogeneity (uniform distribution).
+    
+Describe the data and discuss the result. See lecture slides and Section 9.1.2 of [1].
+
+In this moment I have not free time to selecting any beautiful dataset, so sorry for that, and I just choose the volumes of trades for first 5 trade-days for the same instruments.
+
+```{r}
+sber_volumes = sber_stock_prices_full$VOL[0:5]
+gazp_volumes = gazp_stock_prices_full$VOL[0:5]
+imoex_volumes = imoex_prices_full$VOL[0:5]
+
+trade_volumes <- rbind(sber_volumes, gazp_volumes, imoex_volumes) 
+colnames(trade_volumes) <- c("Mon", "Tue", "Wed", "Thur", "Fri")
+trade_volumes
+```
+
+```{r}
+chisq.test(trade_volumes)
+```
+
+The p-value of x2-test is less than the signficiance level 10% or 5%, that means these groups are heterogeneous
+
+    4. Get a two-way contingency table from sources 3. Conduct a χ2-test for association (independence) between the variables. See lecture slides and Section 9.2 of [1]
+    
+Also, using the same dataset as in a previous part - the first 5 day trading voolumes of SBER, GAZP, IMOEX.
+
+Let's declare two hypotheses:
+(H1): The trading-volume and trading-day for fin instrument are independent variables. There is no association between volumes and trading day.
+(H2): The trading-volume and trading-day for fin instrument are dependent variables. There is an association between volumes and trading day.
+
+To accept or reject the null hypothesis, I choose significant level of 5%.
+
+Note: There are some researches (in smartlab, yahoo.finance, that shows the trading-volume have some correlation with day-of week)
+
+```{r}
+trade_volumes_chi_test <- chisq.test(trade_volumes, correct = TRUE)
+trade_volumes_chi_test
+```
+
+```{r}
+trade_volumes_chi_test$expected
+```
+
+As I mentioned above, The variables are not independent and there is a statistical relationship between the variables, because p-value < 0.05
+H1-hypotheses is not rejected. The variables have association between each other.
+    
+    
+### REFERENCES
+[1] econometrics-with-r.org: https://www.econometrics-with-r.org/3-4-confidence-intervals-for-the-population-mean.html
+[2] Understanding QQ-plots: https://data.library.virginia.edu/understanding-q-q-plots/
+[3] Эффективное время для торговли в течении сессии https://smart-lab.ru/finansoviy-slovar/%D0%AD%D1%84%D1%84%D0%B5%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B5%20%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%20%D0%B4%D0%BB%D1%8F%20%D1%82%D0%BE%D1%80%D0%B3%D0%BE%D0%B2%D0%BB%D0%B8%20%D0%B2%20%D1%82%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B8%20%D1%81%D0%B5%D1%81%D1%81%D0%B8%D0%B8
+
+ 

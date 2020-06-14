@@ -1,0 +1,85 @@
+---
+title: "Home assignment 02: Data analysis Task 4"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis task: 4
+
+### 4. Assignment on Correspondence Analysis
+
+Tarvel Review Ratings Dataset: https://archive.ics.uci.edu/ml/datasets/Tarvel+Review+Ratings
+
+This data set is populated by capturing user ratings from Google reviews. Reviews on attractions from 9 categories across Europe are considered. Google user rating ranges from 1 to 5 and average user rating per category is calculated.
+  
+- Attribute 1 : Unique user id
+- Attribute 2 : Average ratings on churches
+- Attribute 3 : Average ratings on resorts
+- Attribute 4 : Average ratings on beaches
+- Attribute 5 : Average ratings on parks
+- Attribute 6 : Average ratings on theatres
+- Attribute 7 : Average ratings on museums
+  
+  
+2. Use FactoMineR package to:
+```{r}
+data = 
+  as.data.frame(
+    read.table("data/t4/google_review_ratings.csv", header = TRUE, sep = ",")
+  )
+
+head(data)
+```
+
+
+##### (a) Do the χ2 test for independence and interpret it, see Section 2.2.2 of [4].
+```{r}
+chisq.test(data[, 2:7])
+```
+Chi-square test results shows us that we cannot reject the null hypothesis. Null hypothesis tells us that there are not any statistically dependence between components of dataset.
+
+##### (b) Perform the CA, get the 2D representation of row and column profiles See p.87 of [4]
+
+```{r}
+ca_result = CA(data[, 2:7], graph = FALSE)
+plot(ca_result, invisible = "col", title = "CA results, ROWS")
+plot(ca_result, invisible = "row", title = "CA results, COLS")
+plot(ca_result)
+```
+
+##### (c) Analyze the patterns obtained in item 2b. Focus on the total variability, similarities/dissimilarities and the conclusions that can be made from the simultaneous representation of rows and columns. See examples, [4], pp. 92-125.
+
+```{r}
+ca_result
+```
+
+##### (d) Provide the table and graph of eigenvalues, justify the choice of principal components.
+```{r}
+round(ca_result$eig, 2)
+```
+
+Eigenvalues correspond to the amount of information retained by each axis. Dimensions are ordered decreasingly and listed according to the amount of variance explained in the solution. Dimension 1 explains the most variance in the solution, followed by dimension 2 and so on.
+
+The cumulative percentage explained is obtained by adding the successive proportions of variation explained to obtain the running total. For instance, 55.73% plus 35.61% equals 91.24%, and so forth. Therefore, about 91% of the variation is explained by the first two dimensions.
+    
+In our analysis, the first two axes explain 88.6% of the variation. This is an acceptably large percentage.
+
+```{r}
+barplot(ca_result$eig[, 1], names.arg = paste("dim", 1 : nrow(ca_result$eig)))
+```
+    
+##### (e) Discuss the quality of the CA representation based on cos2 for rows and columns, [4], p.87.
+```{r}
+ca_result$col$cos2
+```
+The result of the CA shows that the the second column (Category. 2) well described by dimension 1 with accuracy 0.99%, but the same dimention doesnot reprecent Category 3 as well. So, the sum of occuracies of categories is slightly equal to one.
+    
+```{r}
+ca_result$row$cos2
+```
+The result of the CA shows that the two dimensions 1 and 2 are sufficient to retain 91% of the total variation contained in the rows
+If a row item is well represented by two dimensions, the sum of the cos2 is closed to one. For example, row1 is presented in CA with 99% occuracy (0.43 + 0.56), but also, we have examples where the accuracy extremelly low (row 25 - 35% occuracy)
+
+
+### REFERENCES
+[1] Dataset: https://archive.ics.uci.edu/ml/datasets/Tarvel+Review+Ratings#
+[2] https://www.displayr.com/use-not-use-correspondence-analysis/

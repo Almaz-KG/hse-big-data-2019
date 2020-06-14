@@ -1,0 +1,73 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(pls)
+library(ISLR)
+tail(Hitters)
+```
+
+```{r}
+Hitters = na.omit(Hitters)
+
+tail(Hitters)
+```
+
+```{r}
+summary(Hitters)
+```
+```{r}
+df = data.frame(Hitters)
+df = na.omit(df)
+
+
+df = df[, !(names(df) %in%c("NewLeague") )]
+
+```
+
+
+```{r}
+my_pcr = pcr(Salary ~. , data = df, scale = TRUE, validation = "CV")
+```
+
+
+```{r}
+summary(my_pcr)
+```
+```{r}
+validationplot(my_pcr, val.type = "MSEP")
+```
+
+```{r}
+my_pls = plsr(Salary ~., data = Hitters, scale = TRUE, validation = "CV")
+
+validationplot(my_pls, val.type = "MSEP")
+
+```
+
+```{r}
+library(FactoMineR)
+
+X = read.table("pricequal.dat.txt", header = FALSE)
+
+data(package = "FactoMineR")
+#CA()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

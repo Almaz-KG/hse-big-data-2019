@@ -1,0 +1,46 @@
+---
+title: "Lecture_03"
+author: "Almaz Murzabekov"
+date: "19/09/2019"
+output: html_document
+runtime: shiny
+---
+
+
+Simple Linear regression model
+  yi = b0 + b1xi + e
+  
+  ```{r}
+  
+  tail(Cars93)
+  
+  ```
+  
+  
+  
+  Гетероскедатичность
+  
+  
+  
+  ```{r}
+  y = Cars93$Price
+  x = Cars93$Horsepower
+  
+  lm1 = lm(y ~ x)
+  summary(lm1)
+  plot(x, y)
+  abline(lm1)
+  
+  predict(lm1, new = data.frame(x = c(240, 260)))
+  
+  
+  predict(lm1, new = data.frame(x = c(240, 260)), interval= "confidence")
+  
+  
+  
+  predict(lm1, new = data.frame(x = c(240, 260)), interval= "pred")
+  
+  
+  ```
+  
+  

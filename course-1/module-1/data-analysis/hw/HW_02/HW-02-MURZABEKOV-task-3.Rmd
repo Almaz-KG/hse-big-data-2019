@@ -1,0 +1,234 @@
+---
+title: "Home assignment 02: Data analysis"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis Task 3
+
+
+### 3. Assignment on Principal Component Analysis
+1. Get the multivariate data. You have several options:
+  
+2. Use FactoMineR package to study individuals:
+
+In this work I'm going to do some statisctical researches based on on Principal Component Analysis and make some appropriate conclutions. I picked up the most liquid financial instruments traded in Moscow Exchange. All of the presented stocks are included in a Moscow Exchange Index (or IMOEX). Each datasets contains 8 columns and 192 rows (observations), each row in dataset describes the stock or index price for one day from 2019 January 3th till 2019 October 04.
+
+First of all, we need to reorganize the datasets into one dataset with only nessesary fields. By the **nessesaries** fields I mean some extra preprocessings. The next list contains the columns for research and little description for each column.
+
+- AVERAGE VOLUME
+- AVERAGE PRICE DELTA (CLOSE_PRICE - OPEN_PRICE)
+- MAX PRICE DELTA (CLOSE_PRICE - OPEN_PRICE)
+- MIN PRICE DELTA (CLOSE_PRICE - OPEN_PRICE)
+- COUNT OF UP CLOSE DAYS (observations where DELTA_PRICE >= 0)
+- COUNT OF DOWN CLOSE DAYS (observations where DELTA_PRICE < 0)
+- COUNT OF UP VOLUME DAYS (*cheerful days* - observations where VOLUME > AVERAGE_VOLUME)
+- COUNT OF DOWN VOLUME DAYS (*sleepy days* - observations where VOLUME < AVERAGE_VOLUME)
+- COUNT OF BEAT INDEX DAYS (count of observations where DELTA_PRICE < DELTA_INDEX_PRICE )
+- COUNT OF LOSE INDEX DAYS (count of observations where DELTA_PRICE < DELTA_INDEX_PRICE )
+- AVERAGE RELATIVE STRENGTH INDEX (RSI with n = 14) (See more info here: https://www.rdocumentation.org/packages/TTR/versions/0.23-4/topics/RSI)
+- AVERAGE ON BALANCE VOLUME (See more info here: https://www.rdocumentation.org/packages/TTR/versions/0.23-4/topics/OBV)
+
+```{r}
+imoex = read.csv("data/t3/IMOEX.csv", stringsAsFactors = FALSE)
+
+afks_full = read.csv("data/t3/AFKS.csv", stringsAsFactors = FALSE)
+aflt_full = read.csv("data/t3/AFLT.csv", stringsAsFactors = FALSE)
+alrs_full = read.csv("data/t3/ALRS.csv", stringsAsFactors = FALSE)
+banep_full = read.csv("data/t3/BANEP.csv", stringsAsFactors = FALSE)
+dsky_full = read.csv("data/t3/DSKY.csv", stringsAsFactors = FALSE)
+gazp_full = read.csv("data/t3/GAZP.csv", stringsAsFactors = FALSE)
+gmkn_full = read.csv("data/t3/GMKN.csv", stringsAsFactors = FALSE)
+lkoh_full = read.csv("data/t3/LKOH.csv", stringsAsFactors = FALSE)
+mgnt_full = read.csv("data/t3/MGNT.csv", stringsAsFactors = FALSE)
+moex_full = read.csv("data/t3/MOEX.csv", stringsAsFactors = FALSE)
+mtss_full = read.csv("data/t3/MTSS.csv", stringsAsFactors = FALSE)
+nvtk_full = read.csv("data/t3/NVTK.csv", stringsAsFactors = FALSE)
+sber_full = read.csv("data/t3/SBER.csv", stringsAsFactors = FALSE)
+sibn_full = read.csv("data/t3/SIBN.csv", stringsAsFactors = FALSE)
+sngsp_full = read.csv("data/t3/SNGSP.csv", stringsAsFactors = FALSE)
+vtbr_full = read.csv("data/t3/VTBR.csv", stringsAsFactors = FALSE)
+yndx_full = read.csv("data/t3/YNDX.csv", stringsAsFactors = FALSE)
+```
+
+
+Let's define a function that will extract all nessesary fields
+
+```{r}
+imoex_price_deltas = imoex$CLOSE - imoex$OPEN
+library(TTR)
+
+build_pca_fields <- function(stock_dataset){
+  stock_deltas = stock_dataset$CLOSE - stock_dataset$OPEN
+  
+  average_volume <- as.numeric(mean(stock_dataset$VOL))
+  average_price_delta = mean(stock_deltas)
+  max_price_delta = max(stock_deltas)
+  min_price_delta = min(stock_deltas)
+  count_up_price_days = length((stock_deltas)[(stock_deltas) > 0])
+  count_down_price_days = length((stock_deltas)[(stock_deltas) < 0])
+  count_up_volume_days = length((stock_dataset$VOL)[stock_dataset$VOL > average_volume])
+  count_down_volume_days = length((stock_dataset$VOL)[stock_dataset$VOL < average_volume])
+  count_beat_index_days = length(stock_deltas[stock_deltas > imoex_price_deltas])
+  count_lose_index_days = length(stock_deltas[stock_deltas < imoex_price_deltas])
+  average_rsi = mean(RSI(stock_deltas), na.rm = TRUE)
+  average_obv = mean(OBV(stock_deltas, stock_dataset$VOL), na.rm = TRUE)
+  
+  ticker = stock_dataset$TICKER[1]
+  
+  return(list(ticker, 
+              average_volume, 
+               average_price_delta,
+               max_price_delta,
+               min_price_delta,
+               count_up_price_days,
+               count_down_price_days,
+               count_up_volume_days,
+               count_down_volume_days,
+               count_beat_index_days,
+               count_lose_index_days,
+               average_rsi,
+               average_obv
+                  ))
+}
+```
+
+Let's extract fields for all financial instrument!
+
+```{r}
+afks_data = build_pca_fields(afks_full)
+aflt_data = build_pca_fields(aflt_full)
+alrs_data = build_pca_fields(alrs_full)
+banep_data = build_pca_fields(banep_full)
+dsky_data = build_pca_fields(dsky_full)
+gazp_data = build_pca_fields(gazp_full)
+gmkn_data = build_pca_fields(gmkn_full)
+lkoh_data = build_pca_fields(lkoh_full)
+mgnt_data = build_pca_fields(mgnt_full)
+moex_data = build_pca_fields(moex_full)
+mtss_data = build_pca_fields(mtss_full)
+nvtk_data = build_pca_fields(nvtk_full)
+sber_data = build_pca_fields(sber_full)
+sibn_data = build_pca_fields(sibn_full)
+sngsp_data = build_pca_fields(sngsp_full)
+vtbr_data = build_pca_fields(vtbr_full)
+yndx_data = build_pca_fields(yndx_full)
+```
+
+Let's build result dataset for research!
+```{r}
+afks = data.frame(Reduce(cbind, afks_data))
+aflt = data.frame(Reduce(cbind, aflt_data))
+alrs = data.frame(Reduce(cbind, alrs_data))
+banep = data.frame(Reduce(cbind, banep_data))
+dsky = data.frame(Reduce(cbind, dsky_data))
+gazp = data.frame(Reduce(cbind, gazp_data))
+gmkn = data.frame(Reduce(cbind, gmkn_data))
+lkoh = data.frame(Reduce(cbind, lkoh_data))
+mgnt = data.frame(Reduce(cbind, mgnt_data))
+moex = data.frame(Reduce(cbind, moex_data))
+mtss = data.frame(Reduce(cbind, mtss_data))
+nvtk = data.frame(Reduce(cbind, nvtk_data))
+sber = data.frame(Reduce(cbind, sber_data))
+sibn = data.frame(Reduce(cbind, sibn_data))
+sngsp = data.frame(Reduce(cbind, sngsp_data))
+vtbr = data.frame(Reduce(cbind, vtbr_data))
+yndx = data.frame(Reduce(cbind, yndx_data))
+
+dataset = rbind(afks, aflt, alrs, banep, dsky, gazp, gmkn, lkoh, mgnt, moex, mtss, nvtk, sber, sibn, sngsp, vtbr, yndx)
+
+dataset <- setNames(dataset, c(
+  "TICKER", 
+  "AVERAGE_VOLUME", 
+  "AVERAGE_PRICE_DELTA",
+  "MAX_PRICE_DELTA",
+  "MIN_PRICE_DELTA",
+  "COUNT_UP_PRICE_DAYS",
+  "COUNT_DOWN_PRICE_DAYS",
+  "COUNT_UP_VOLUME_DAYS",
+  "COUNT_DOWN_VOLUME_DAYS",
+  "COUNT_BEAT_INDEX_DAYS",
+  "COUNT_LOSE_INDEX_DAYS",
+  "AVERAGE_RSI",
+  "AVERAGE_OBV"))
+
+summary(dataset)
+
+```
+
+  
+    (a) Plot the individuals in the plane corresponding to the first two principal components (PCs), see [4], p.31. Comment on the resulting cloud.
+    
+```{r}
+library(FactoMineR)
+
+dataset$AVERAGE_VOLUME = as.numeric(dataset$AVERAGE_VOLUME)
+dataset$AVERAGE_PRICE_DELTA = as.numeric(dataset$AVERAGE_PRICE_DELTA)
+dataset$MAX_PRICE_DELTA = as.numeric(dataset$MAX_PRICE_DELTA)                
+dataset$MIN_PRICE_DELTA = as.numeric(dataset$MIN_PRICE_DELTA)                
+dataset$COUNT_UP_PRICE_DAYS = as.numeric(dataset$COUNT_UP_PRICE_DAYS)                
+dataset$COUNT_DOWN_PRICE_DAYS = as.numeric(dataset$COUNT_DOWN_PRICE_DAYS)                
+dataset$COUNT_UP_VOLUME_DAYS = as.numeric(dataset$COUNT_UP_VOLUME_DAYS)                
+dataset$COUNT_DOWN_VOLUME_DAYS = as.numeric(dataset$COUNT_DOWN_VOLUME_DAYS)                
+dataset$COUNT_BEAT_INDEX_DAYS = as.numeric(dataset$COUNT_BEAT_INDEX_DAYS)                
+dataset$COUNT_LOSE_INDEX_DAYS = as.numeric(dataset$COUNT_LOSE_INDEX_DAYS)                
+dataset$AVERAGE_RSI = as.numeric(dataset$AVERAGE_RSI)
+dataset$AVERAGE_OBV = as.numeric(dataset$AVERAGE_OBV)     
+
+pca = PCA(dataset[, -1], quanti.sup=c(6, 12))
+
+```
+   
+In this plot we can see that the first dimention save 85% information of original dataset, and the second has ~9%. It is a good PCA result. Also, we can clearify that there are no two dataset's property with correlation coeff is negative.
+
+```{r}
+dimdesc(pca)
+```
+   
+    (b) Justify the choice of the PCs by plotting the eigenvalues, [4],p.32. Calculate how much of the total variability is explained by the first two PCs.
+    
+```{r}
+barplot(pca$eig[, 1], main="Eigenvalues", names.arg = 1:nrow(pca$eig))
+```
+   
+    
+    (c) Discuss the quality of the PCA representation: provide cos2 and the contributions for each individual, [4], p.34.
+
+```{r}
+pca$ind$cos2
+```
+    
+    (d) If there are categorical variables, paint the individuals with different colors according to the categories. Draw the confidence ellipses and interpret them, [4], p. 36.
+
+```{r}
+aa = cbind.data.frame(dataset[, 1], pca$ind$coord)
+bb = coord.ellipse(aa, bary = TRUE)
+plot.PCA(pca, ellipse = bb)
+```
+
+3. Study cloud of variables, [4], pp. 36-44.
+    
+    (a) Using the graphical output of pca command, discuss correlation between the variables including presence of groups of variables that are closely related.
+```{r}
+summary(pca)
+```
+    
+    
+    
+    (b) Discuss the quality of the PCA representation: provide cos2 and the contributions for variables.
+```{r}
+pca$var
+```
+    
+    (c) Plot the correlations between variables using pairs function. Compare the result with that of 3a.
+    
+```{r}
+
+library(corrplot)
+corrplot(pca$var$cor, 
+         type = "upper", 
+         tl.col = "black")
+```
+
+    
+See pp. 44-58 of [4] for the examples.
+

@@ -1,0 +1,237 @@
+---
+title: "Home assignment 02: Data analysis Task 2"
+output: html_notebook
+---
+
+This is the second Almaz Murzabekov's home assignment of Data analysis Task 2
+
+### 2 Assignment on Regression and Classification
+
+    1. Simple regression. Get a univariate dataset from sources 2.
+
+For this task I picked up the prices of the Index of Moscow Exchange (IMOEX) from Moscow Exchange (MOEX); IMOEX is the main ruble-denominated benchmark of the Russian stock market. This datasets contains 9 columns and 192 rows (observations), each row in dataset describes the stock data (like prices, volume, date, etc) for one day from 2019 January 3th till 2019 October 04.
+
+```{r}
+sber_prices = read.csv("data/t2/SBER.csv", header = TRUE, stringsAsFactors = FALSE)
+imoex_prices = read.csv("data/t2/IMOEX.csv", header = TRUE, stringsAsFactors = FALSE)
+
+sber = (sber_prices$OPEN - sber_prices$CLOSE) / sber_prices$CLOSE
+imoex = (imoex_prices$OPEN - imoex_prices$CLOSE) / imoex_prices$CLOSE
+
+research_dataset <- as.data.frame(
+  setNames(
+    cbind(sber, imoex), 
+    c("SBER", "IMOEX"))
+  )
+
+summary(research_dataset)
+```
+
+##### (a) Build a simple regression model (command lm). Provide the estimates of the model’s parameters. Draw the scatter plot and the regression line.
+Let's build a regretion model for CLOSE_PRICES for index
+```{r}
+head(research_dataset)
+```
+
+First of all, we need to split dataset into 2 subset for train and test with 75% propotion for train dataset
+
+```{r}
+
+## set the seed to make your partition reproducible
+set.seed(123)
+smp_size <- floor(0.75 * nrow(research_dataset))
+train_ind <- sample(seq_len(nrow(research_dataset)), size = smp_size)
+
+research_dataset_train <- research_dataset[train_ind, ]
+research_dataset_test <- research_dataset[-train_ind, ]
+
+simple_regression_model = lm(sber ~ imoex, data = research_dataset_train)
+
+library(ggplot2)
+library(tidyverse)
+ggplot(data = research_dataset) + geom_point(mapping = aes(x = sber, y = imoex))
+```
+
+##### (b) Analyze the summary statistics (command summary()) focusing on:
+        i. The t-test for the slope. Explain. 
+        ii. The F-test. Explain.
+        iii. R2 coefficient. Explain.
+```{r}
+summary(simple_regression_model)
+```
+        
+ii. The F-test. Explain.
+
+Result of the summary:
+  F-statistic: 101.7 on 1 and 142 DF,  p-value: < 2.2e-16
+
+The p-value is less than the significance level 5%. Sample data provides sufficient evidence to conclude that the regression model fits the data better than the model with no independent variables.
+
+iii. R2 coefficient. Explain.
+
+Multiple R-squared:  0.4173,	Adjusted R-squared:  0.4132
+
+The percentage of the response variable variation that is explained by a linear model (R-squared = Explained variation / Total variation)
+
+R-squared = ~41% indicates that the model explains most of the variability of the response data around its mean. That means, if you want to use this model for trading, please, just flip a coin - it will be more profitable!
+        
+    (c) Plot the residuals against fitted values and comment on the model’s adequacy. Examine the qq-plot for the residuals.
+    
+```{r}
+plot(simple_regression_model)
+```
+    
+    (d) Make predictions for several new values of the independent variable. For each predicted value, compute and plot the confidence intervals for the mean and single value.
+    
+```{r}
+
+head(research_dataset_test[, "sber"])
+
+prediction_for_test = predict(simple_regression_model, new = research_dataset_test, interval = "pred")
+conf_interval_for_test = predict(simple_regression_model, new = research_dataset_test, interval = "confidence")
+
+plot(research_dataset_test$sber, prediction_for_test[,1], col="black", xlab = "Drawing", ylab = "Expression")
+```
+    
+### REFERENCES 
+[1] https://r-analytics.blogspot.com/2013/02/blog-post.html
+    
+
+2. Multivariate regression. Get a multivariate dataset (at least 3 variables) from 3.
+
+```{r}
+gazp_prices = read.csv("data/t2/GAZP.csv", header = TRUE, stringsAsFactors = FALSE)
+
+gazp = (gazp_prices$OPEN - gazp_prices$CLOSE) / gazp_prices$CLOSE
+
+research_dataset2 <- as.data.frame(
+  setNames(
+    cbind(sber, imoex, gazp), 
+    c("SBER", "IMOEX", "GAZP"))
+  )
+
+smp_size <- floor(0.75 * nrow(research_dataset2))
+mr_train_ind <- sample(seq_len(nrow(research_dataset2)), size = smp_size)
+
+mr_research_dataset_train <- research_dataset2[mr_train_ind, ]
+mr_research_dataset_test <- research_dataset2[-mr_train_ind, ]
+
+
+
+ggplot(data = research_dataset2) + geom_point(mapping = aes(x = sber, y = imoex + gazp))
+```
+
+
+    (a) Choose the response and explanatory variables.
+    
+Response variable is delta price of SBERBANK
+Explanatory variables are delta prices of Moscow exchange index (IMOEX) and deltas of GAZP stock
+    
+    (b) Build a multivariate linear model (command lm). Provide the estimates of the model’s parameters.
+    
+```{r}
+multivariate_regression_model = lm(sber ~ imoex + gazp, data = mr_research_dataset_train)
+```
+    
+    (c) Analyze the summary statistics (command summary()) with the emphasis on:
+    
+```{r}
+summary(multivariate_regression_model)
+```
+Result of the summary:
+  F-statistic: 77.45 on 2 and 141 DF,  p-value: < 2.2e-16
+
+The p-value is less than the significance level 5%. Sample data provides sufficient evidence to conclude that the regression model fits the data better than the model with no independent variables.
+
+iii. R2 coefficient. Explain.
+
+Multiple R-squared:  0.5235,	Adjusted R-squared:  0.5167 
+The percentage of the response variable variation that is explained by a linear model (R-squared = Explained variation / Total variation)
+
+R-squared = 52.35% indicates that the model explains most of the variability of the response data around its mean. The prediction pover of this model is 52% it's slightly greather than simple linear regression model (42%)
+        
+    (d) Plot the residuals against fitted values and comment on the model’s adequacy.
+    
+```{r}
+plot(multivariate_regression_model)
+```
+    
+    (e) Play with your model by adding or removing the explanatory variables. Alternatively, add a non-linear term(s) to your model:
+        i. Choose the best one by the AIC criterion (command stepAIC), see p. 295 of [1]. 
+        ii. For each model, watch the value of the adjusted R2. Explain.
+        
+3. Logistic regression. Get a binary response regression dataset from 2 or 3. Briefly describe the data.
+
+    (a) Build a logistic regression model (command glm). Comment on the significance of the coefficients.
+```{r}
+model_lr = glm(sber ~ imoex + gazp, data = mr_research_dataset_train)
+print(model_lr)
+
+plot(model_lr)
+```
+    
+    (b) Use stepAIC command to select the best model.
+    
+    
+```{r}
+stepAIC(model_lr)
+```
+    
+    (c) Make a prediction based on the entire dataset. State the threshold of acceptance. Compare the forecast with the actual observations. Comment on the results.
+  ???
+    
+    (d) Divide the entire set into training and test subsets. Rebuild the model using only the training subset. Make predictions for the test subset. Comment.
+    
+4. Discriminant analysis. Use the same dataset as for the logistic regression.
+
+    (a) Conduct the linear discriminant analysis (command lda, package MASS) using training and test subsets. Compare the forecast with the actual observations. Comment on the results.
+    
+    
+```{r}
+library(MASS)
+
+model_lda = lda(sber ~ imoex + gazp, data = mr_research_dataset_train)
+print(model_LDA)
+```
+    
+    (b) Conduct the quadratic discriminant analysis (command qda). Comment.
+
+???
+
+5. The KNN classifier. Use the same dataset as for the logistic regression and discriminant analysis.
+
+    (a) Conduct the KNN classification (command knn(), package class) using training and test subsets. Compare the forecast with the actual observations. Comment on the results.
+```{r}
+library(class)
+
+target_category = mr_research_dataset_train[, "sber"]
+test_category = mr_research_dataset_test[, "sber"]
+
+set.seed(231)
+knn_predicts = knn(mr_research_dataset_train, mr_research_dataset_test, cl = target_category, k = 13)
+
+test_category[1:10]
+knn_predicts[1:10]
+```
+  
+    
+    (b) Play with the number of nearest neighbors K.
+        
+```{r}
+set.seed(231)
+knn_predicts = knn(mr_research_dataset_train, mr_research_dataset_test, cl = target_category, k = 76)
+
+test_category[1:10]
+knn_predicts[1:10]
+```
+```{r}
+set.seed(231)
+knn_predicts = knn(mr_research_dataset_train, mr_research_dataset_test, cl = target_category, k = 3)
+
+test_category[1:10]
+knn_predicts[1:10]
+```
+    
+6. Compare the quality of classification obtained by algorithms 3-5 for the test subset.
+
+For tasks 3-5, see [3], Chapter 4.

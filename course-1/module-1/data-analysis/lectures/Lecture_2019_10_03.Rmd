@@ -1,0 +1,130 @@
+---
+title: "Some lecture"
+output: html_notebook
+---
+
+#FactoMineR package
+
+```{r}
+  library(FactoMineR)
+  data(decathlon)
+```
+
+```{r}
+  tail(decathlon)
+```
+```{r}
+str(decathlon)
+```
+
+```{r}
+myPCA=PCA(decathlon, quanti.sup=11:12, quali.sup=13)
+```
+```{r}
+myPCA
+```
+
+```{r}
+plot(myPCA, habillage = 13)
+```
+#karpov and Lorenzo - far separeted.
+#the values of variables are very diffent, e.g.
+#to prove it:
+```{r}
+decathlon["Uldal", ] #entie row
+```
+
+
+```{r}
+decathlon["Karpov", ]
+```
+#for Discus e.g., Javeline, not big diffenece but still:
+#as these too point are most different, others are even more close
+#comparison close guys
+```{r}
+decathlon["Karpov", ]
+```
+
+
+```{r}
+decathlon["Clay", ]
+```
+#geometrically, they are close, and values closed as well.
+```{r}
+myPCA2=PCA(decathlon, quali.sup=13)
+```
+
+```{r}
+myPCA2
+```
+#2dims plot, analyzing original valriables - columns;
+#
+```{r}
+plot(myPCA2, habillage = 13)
+```
+#more variables - all, 1 to 12 instead of 11-12
+
+```{r}
+myPCA2$ind$coord
+```
+
+#first 5 are major dimenstions
+```{r}
+PC1scores=myPCA2$ind$coord[, 1]
+PC1scores
+```
+
+```{r}
+y100=decathlon[,1]
+y100
+```
+
+```{r}
+plot(as.numeric(PC1scores), y100)
+```
+
+```{r}
+cor(as.numeric(PC1scores), y100) #correlation is -0.7081629
+```
+
+```{r}
+myPCA$ind$cos2
+```
+
+
+```{r}
+X=read.csv("https://web.stanford.edu/~hastie/ElemStatLearn/datasets/zip.digits/train.2",header = FALSE) # read from the on-line source
+tail(X,1) # list the last line
+```
+
+
+```{r}
+m3=matrix(as.numeric(X[17,]),16,16) # take image 39 (line of matrix X) and present it as a 16x16 matrix
+image(-m3[,ncol(m3):1], axes = F, col = grey(seq(0, 1, length = 256))) # command image plots the greyscale image of 2
+```
+
+
+
+```{r}
+PCA(X)
+```
+
+```{r}
+m3=matrix(as.numeric(X[671,]),16,16) # take image 39 (line of matrix X) and present it as a 16x16 matrix
+image(-m3[,ncol(m3):1], axes = F, col = grey(seq(0, 1, length = 256))) # command image plots the greyscale image of 2
+```
+
+```{r}
+m3=matrix(as.numeric(X[212,]),16,16) # take image 39 (line of matrix X) and present it as a 16x16 matrix
+image(-m3[,ncol(m3):1], axes = F, col = grey(seq(0, 1, length = 256))) # command image plots the greyscale image of 2
+```
+```{r}
+m3=matrix(as.numeric(X[565,]),16,16) # take image 39 (line of matrix X) and present it as a 16x16 matrix
+image(-m3[,ncol(m3):1], axes = F, col = grey(seq(0, 1, length = 256))) # command image plots the greyscale image of 2
+```
+
+```{r}
+m3=matrix(as.numeric(X[601,]),16,16) # take image 39 (line of matrix X) and present it as a 16x16 matrix
+image(-m3[,ncol(m3):1], axes = F, col = grey(seq(0, 1, length = 256))) # command image plots the greyscale image of 2
+```
+

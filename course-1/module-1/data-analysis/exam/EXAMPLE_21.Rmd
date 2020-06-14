@@ -1,0 +1,141 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Problem 1
+
+```{r}
+n1_size = 155
+n1_answers = 52
+
+n2_size = 170
+n2_answers = 90
+
+n1_proportion = n1_answers / n1_size
+n2_proportion = n2_answers / n2_size
+
+n1_proportion
+n2_proportion
+
+prop.test(c(90, 52), c(170, 155), conf.level = 0.95, correct = TRUE)
+```
+
+Q1: 
+
+Q2: 
+
+Q3:
+
+
+## Problem 2
+```{r}
+chi_test_data = read.csv("chi2test21.csv", header = FALSE, sep = ",")
+
+head(chi_test_data, 3)
+```
+```{r}
+tab = table(chi_test_data)
+
+data_matrix = as.matrix(chi_test_data)
+
+table(data_matrix)
+```
+```{r}
+chisq.test(data_matrix)
+```
+ 
+Q1:  
+Q2: 1 Not reject ( p > 0.9951)
+
+
+
+
+## Problem 3
+
+```{r}
+regression_data = read.csv("Reg21.csv", header = FALSE, sep = ",")
+
+head(regression_data, 3)
+
+
+```
+
+
+Q1:
+```{r}
+model1 = lm(V1 ~ V2 + V3 + V4 + V5+ V6, data = regression_data)
+summary(model1)
+
+```
+
+
+
+
+
+Q2:
+Q3:
+Q4:
+
+```{r}
+library(fBasics)
+
+normalTest(regression_data, method = "jb")
+```
+
+
+## Problem 4
+
+```{r}
+pca_data = read.csv("PCA21.csv", header = FALSE, sep = ",")
+
+head(pca_data, 3)
+```
+
+
+```{r}
+pca = PCA(pca_data)
+
+
+```
+
+Q1: 5) 1-19
+Q2: 
+
+
+```{r}
+  pca
+```
+
+```{r}
+pca
+```
+```{r}
+pca$ind$coord[15]
+
+pca$ind$cos2[15]
+pca$ind$contrib[15]
+```
+
+
+```{r}
+pca$var$cos2[2]
+```
+
+
+
+
+
+```{r}
+pca$eig
+```
+
+
+
+
+
+
+
+
+
+

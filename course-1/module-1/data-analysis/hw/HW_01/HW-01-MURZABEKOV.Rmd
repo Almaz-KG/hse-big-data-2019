@@ -1,0 +1,383 @@
+---
+title: "Home assignment 01: Data analysis"
+output: html_notebook
+---
+
+This is Almaz Murzabekov's home assignment of Data analysis 
+
+In this work I'm going to demonstrate some basic statisctical analysis and make some conclutions by statistical matters. I picked up two financial datasets from Moscow Exchange (MOEX), the first one is stock prices of largest bank in Eustern Europe: Sberbank (SBER) and the second dataset is an Index of Moscow Exchange (IMOEX) is the main ruble-denominated benchmark of the Russian stock market. Each datasets contains 8 columns and 177 rows (observations), each row in dataset describes the stock or index price for one day from 2019 January 1th till 2019 September 13.
+
+
+1. Lets try to download dataset to R studio:
+
+
+```
+  sber = read.csv("SBER.csv", stringsAsFactors = FALSE)
+  imoex = read.csv("IMOEX.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+  sber = read.csv("SBER.csv", stringsAsFactors = FALSE)
+  imoex = read.csv("IMOEX.csv", stringsAsFactors = FALSE)
+```
+
+2.  OK, now we have two datasets with financial data
+    So, lets check the structure of data and columns data types
+    
+```{r}
+  str(sber)
+```
+
+```{r}
+  str(imoex)
+```
+
+3. We have historical dataset of stock prices, so, lets, plot the close price for sberbank's stock (to clearify and get some graphical information). Before plotting we need to change the type of sber$DATE column for pure graphical matters, because otherwise we will have some strange R plot (it is a technical moment)
+```
+  library(stringr)
+  sber_dates_str = str_replace_all(sber$DATE, "[\n]" , "")
+  sber$DATE <- as.Date(sber_dates_str, "%Y%m%d")
+  plot(sber$DATE, sber$CLOSE, type="l", xlab="MOEX: SBER close price", ylab="Sberbank stock", xaxt="n", yaxt="n")
+```
+```{r}
+  library(stringr)
+  sber_dates_str = str_replace_all(sber$DATE, "[\n]" , "")
+  sber$DATE <- as.Date(sber_dates_str, "%Y%m%d")
+  plot(sber$DATE, sber$CLOSE, type="l", xlab="MOEX: SBER close price", ylab="Sberbank stock", xaxt="n", yaxt="n")
+```
+
+
+The IMOEX dataset has the same structure as sberbank stock price dataset. The graphical description of this dataset provided bellow
+```
+  imoex_dates_str = str_replace_all(imoex$DATE, "[\n]" , "")
+  imoex$DATE <- as.Date(imoex_dates_str, "%Y%m%d")
+  
+  plot(imoex$DATE, imoex$CLOSE, type="l", xlab="MOEX: MOEX index close price", ylab="Moscow exchange index", xaxt="n", yaxt="n")
+```
+```{r}
+  imoex_dates_str = str_replace_all(imoex$DATE, "[\n]" , "")
+  imoex$DATE <- as.Date(imoex_dates_str, "%Y%m%d")
+  
+  plot(imoex$DATE, imoex$CLOSE, type="l", xlab="MOEX: MOEX index close price", ylab="Moscow exchange index", xaxt="n", yaxt="n")
+```
+
+I hope this short description is enought for this part of task.
+
+
+### Exercise 1:
+
+Assignment on Descriptive Statistics
+Univariate data. Get a univariate dataset from sources 1 or 2 and briefly describe it.
+
+Using these data:
+
+(a) Construct a stem-and-leaf and histogram. Impose the empirical density estimate on the histogram. Discuss the results focusing on the shape of the plots and number of modes.
+
+(b) Compute the mean and median. Based solely on that, conclude whether the distribution is skewed. Find the proportion of the data which are less than the mean value.
+
+(c) Compute the 1st and 3rd quartiles, the 90th quantile and the mode. Explain the meaning of the obtained quantities. Find the value that cuts off the top 25% of the data.
+
+(d) Compute the range, the sample standard deviation and the IQR. Construct the boxplot of the data. Comment on the boxplot including skewness, outliers etc.
+
+(e) Check whether the empirical distribution is normal by examining the QQ-plot. See examples in [1], Section 2.2.
+
+<br>
+For this exersice I picked up the average day-range of stock price. In technical analysis this type of indacators called as Average True Range (ATR), and the formula of calculation the value of ATR is quite simple:
+  
+  `ATR_of_day = CLOSE_PRICE - OPEN_PRICE`
+
+Of couse, this computation formula is not fully correct for originally ATR developed by J. Welles Wilder, Jr. for commodities. In this exersice I will use the simplified version of ATR where the smoothing period is 1 day, and simple calculation with CLOSE_PRICE minus OPEN_PRICE
+
+So, lets calculate the ATR for sberbank stocks
+
+```{r}
+  sber_atr = sber$CLOSE - sber$OPEN
+
+  str(sber_atr)
+```
+
+And some example values of sberbank ATR is provided below
+```{r}
+  tail(sber_atr)
+```
+
+This ATR values describes the size of day price changes, as known as daily volatility of financial instrument
+
+##### (a) Construct a stem-and-leaf and histogram. Impose the empirical density estimate on the histogram. Discuss the results focusing on the shape of the plots and number of modes.
+
+If we draw the histogram distrubution of this ATR it MUST support by normal distrubution, so lets check it
+```
+  hist(sber_atr, prob = TRUE, xlab = "Histogram of sber's ATR")
+  lines(density(sber_atr))
+```
+
+```{r}
+hist(sber_atr, prob = TRUE, xlab = "Histogram of sber's ATR")
+lines(density(sber_atr))
+```
+In other hand, we can drow the stem-and-leaf diagram, it is another kind of histogram chart
+
+```{r}
+stem(sber_atr)
+```
+We need to discuss little bit about "Why this distrubution is so like as normal distribution?" 
+
+As I expected, the histogram graph of sberbank ATR looks like as a normal distribution. It is a result of efficient market hipothesis (EMH). The Efficient Market Hypothesis is an investment theory whereby share prices reflect all information and consistent alpha generation is impossible. Theoretically, neither technical nor fundamental analysis can produce risk-adjusted excess returns, or alpha, consistently and only inside information can result in outsized risk-adjusted returns. According to the EMH, stocks always trade at their fair value on stock exchanges, making it impossible for investors to either purchase undervalued stocks or sell stocks for inflated prices. 
+
+According this statement we can understand why daily changes of stock price is like normal distribution: it is because most of days the difference between open and close prices (delta) is quite the same, and in histogram this deltas takes a huge space. The leafs of histogram is so tiny because there aren't many high volatility days (days whith abnourmous delta in absolute value)
+
+
+##### (b) Compute the mean and median. Based solely on that, conclude whether the distribution is skewed. Find the proportion of the data which are less than the mean value.
+
+Lets discuss little bit about the ATR's properties in numerical perspective 
+```{r}
+mean(sber$OPEN)
+
+max(sber_atr)
+min(sber_atr)
+mean(sber_atr)
+median(sber_atr)
+```
+The high volatility day in 2019 for Sberbank's stock price was with ATR = 8.77₽, in stem plot we can see this day. It means in that day the price grow up for 8.77₽ rubles per share, or 4% for a day, where the average open price for observed period was 223₽. In stock market 4% is a big number per day, but it is not a huge number. Market and day-traders knows a higher numbers, for example, in march 2014 (Russian Crimea crisis)
+
+The second highly volatility day was with ATR = -7.88₽ per day. In that day the stock price dropped down for 7.88₽
+Mean and median of sberbank ATR is 15 kopeek (or 0.15₽) and 10 kopeek (or 0.10₽)
+The difference between mean and median is quite simple to describe, the median value is lower than mean because the extreme values is not affected for median
+
+If we want to observe some information of shape of distribution, we should to clerify that the shape of distribution of sberbank stock price's ATR should be in a symmentric way by EMH. But because the mean is 0.155 and the median is 0.1, we see that mean > median, and it says the shape of distribution is a right-skewed. It is an interesting observation and I suppose there are some clear explanation of this phenomena (I really don't know, why this distribution is right-skewed, but EMH says that distribution should be in symmetric manner)
+
+
+##### (c) Compute the 1st and 3rd quartiles, the 90th quantile and the mode. Explain the meaning of the obtained quantities. Find the value that cuts off the top 25% of the data.
+
+```{r}
+quantile(sber_atr)
+```
+
+The four quartiles above describes the day-range of stock price. 
+The first quartile is from -7.88₽ to -1.7₽
+The interquartile range is from -1.70₽ to +2.11₽ 
+The last quartile is from +2.11₽ to +8.77₽
+
+```{r}
+quantile(sber_atr, 0.9)
+```
+The 90th quantile is 3.496₽
+
+```{r}
+which(table(sber_atr) == max(table(sber_atr)))
+```
+The mode is the value that has highest number of occurrences in a set of data. The mode of sber's day-range is +3.239₽ with 143 observations.
+Hm... I think it is strange fact, because 143 observation of 177 is quite a big number. So, lets rewrite code for calculating mode value
+
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+getmode(sber_atr)
+```
+I found this code in R tutorial, so I hope this code is correct. But result of this code is little bit different, so, where is the truth?
+
+##### (d) Compute the range, the sample standard deviation and the IQR. Construct the boxplot of the data. Comment on the boxplot including skewness, outliers etc.
+
+```{r}
+range(sber_atr)
+
+diff(range(sber_atr))
+
+sd(sber_atr)
+
+IQR(sber_atr)
+```
+The range of this observation is from -7.88₽ (minimum of observations) to +8.77₽ (the maximum of observations)
+
+The difference between minimum and maximum is 16.65₽
+
+The standard deviation of this day-changes is 2.88. The standard deviation is a value, that describes how much the each value of a observation differ from the mean value. That means each observation (separately) differ from mean for ±2.88₽
+
+The interquartile range is from -1.70₽ to +2.11₽ (see c-section) and equal to 3.81₽
+
+##### (e) Check whether the empirical distribution is normal by examining the QQ-plot. See examples in [1], Section 2.2. 
+
+```{r}
+library(EnvStats)
+qqPlot(sber_atr)
+```
+
+This qqPlot in fact is not descibing something profitable, because for this plot we should choose another columns.
+
+
+### Exercise 2:
+
+Bivariate data. 
+
+Get the bivariate data by: (i) retrieving **prices for two stocks** from data source 1 (of equal length and periodicity!) or (ii) finding the appropriate bivariate built-in set 2.
+
+(a) Create side-by-side boxplots. Compare the centers and spreads.
+(b) Draw the scatter plot. Comment on the possible dependence and presence of outliers.
+(c) Compute Pearson’s and Spearman’s coefficient of correlation. Interpret and compare their values. Are their values consistent with the scatter plot?
+(d) Add the marginal distributions to the scatter plot. For that purpose, use histogram and box plot.
+(e) Depict the bivariate box plot. Comment on the outliers. Remove the outliers, if any, and re-compute the Pearson correlation coefficient.
+(f) Create the convex hull. Remove the observations lying on the hull and re-compute the correlation coefficient.
+For items 2a-2c, see [1], Section 3. For items 2d-2f, see [2], Section 2.2.
+
+
+In this section I want to make some statistical observations of Sberbank's stock prices and IMOEX ruble-denominated benchmark of the Russian stock market.  
+
+##### (a) Create side-by-side boxplots. Compare the centers and spreads.
+
+Firstly, for comparing two datasets we need pick up the IMOEX's day-range
+
+```{r}
+imoex_atr = imoex$CLOSE - imoex$OPEN
+tail(imoex_atr)
+```
+
+```
+layout(matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE), widths = c(2, 1), heights = c(1, 2), respect = TRUE)
+plot(sber_atr, imoex_atr)
+hist(sber_atr)
+boxplot(imoex_atr)
+```
+
+```{r}
+layout(matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE), widths = c(2, 1), heights = c(1, 2), respect = TRUE)
+plot(sber_atr, imoex_atr)
+hist(sber_atr)
+boxplot(imoex_atr)
+```
+
+
+##### (b) Draw the scatter plot. Comment on the possible dependence and presence of outliers.
+```{r}
+plot(x = sber$CLOSE,
+     y = imoex$CLOSE,
+     xlab = "SBERBANK",
+     ylab = "IMOEX",		 
+     main = "SBER vs IMOEX")
+```
+
+```{r}
+
+plot(sber$DATE, sber$CLOSE, type="l",  xlab = "", ylab="Sberbank stock (blue)", col="blue")
+par(new=TRUE)
+plot(imoex$DATE, imoex$CLOSE, type="l", xlab="MOEX: IMOEX close price (green)",  ylab = "", col="green")
+
+```
+
+##### (c) Compute Pearson’s and Spearman’s coefficient of correlation. Interpret and compare their values. Are their values consistent with the scatter plot?
+
+```{r}
+cor(sber$CLOSE, imoex$CLOSE, method="pearson")
+cor(sber$CLOSE, imoex$CLOSE, method="spearman")
+```
+The Pearson's correlation cofficient is a measure the relative strength of the linear relationship between two variables. In this example we calculate correlation between sberbank CLOSE priceses and IMOEX Close prices, and the coefficient value is 0.8082 or 80.82%. This is a big value and we can say the CLOSE prices of two financial instrument have a strong positive linear relationship (also we can see it in chart above) 
+
+The Spearman's correlation cofficient is the same measure but with some little changes in calculation algorithms. This correlation is the Pearson correlation coefficient computed with the ranked (sorted) data, and this value is slightly higher than Pearson's cofficient.
+
+Why this correlation between SBER and IMOEX is so strong?
+I think it is because sberbank's stocks (SBER - ordinary share and SBERP - preferred share) have 15% of all IMOEX index, and SBER is main "trading" stock in Moscow Exchange.
+
+##### (d) Add the marginal distributions to the scatter plot. For that purpose, use histogram and box plot.
+```{r}
+layout(matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE), widths = c(2, 1), heights = c(1, 2), respect = TRUE)
+
+data <- data.frame(cbind(sber$CLOSE, imoex$CLOSE))
+plot(sber$CLOSE ~ imoex$CLOSE, data = data, cex.lab = 0.9)
+
+with(data = data, hist(imoex_atr, main = ""))
+with(data = data, boxplot(sber_atr))
+```
+
+##### (e) Depict the bivariate box plot. Comment on the outliers. Remove the outliers, if any, and re-compute the Pearson correlation coefficient.
+```{r}
+library(MVA)
+
+bvbox(cbind(sber$CLOSE, imoex$CLOSE))
+```
+This chart is a two-dimensional analogue of boxplot for univariate data
+Consists of a pair of concentric ellipses, one of which (the “hinge”) includes 50% of the data and the other (called the “fence”) delineates outliers. Regression lines of both y on x and x on y are shown. The acute angle between the regression lines is small for large correlation and vice versa. In this sample we havn't any outliers, so we can't to remove outliers. 
+
+##### (f) Create the convex hull. Remove the observations lying on the hull and re-compute the correlation coefficient.
+```{r}
+data <- data.frame(cbind(sber$CLOSE, imoex$CLOSE))
+hull <- with(data = data, chull(sber$CLOSE, imoex$CLOSE))
+with(data = data, plot(sber$CLOSE, imoex$CLOSE, pch = 1))
+with(data = data, polygon(sber$CLOSE[hull], imoex$CLOSE[hull], density = 15, angle = 30))
+```
+Another approach to deal with the problem of calculating correlation without the distortion caused by outliers.
+The convex hull of a set of bivariate observations consists of the vertices of the smallest convex polyhedron in variable space within which all data points lie.
+Removal of the points lying on the convex hull can eliminate isolated outliers while preserving the general shape of the bivariate distribution
+
+### Exercise 3:
+
+Multivariate data:
+
+(a) Pick up a dataset which has three variables (from source 2 or 3) and create the bubble plot. Interpret the result. See [2], Section 2.3.
+
+(b) Use data source 2 or 3. Create the glyph plot of all observations, Section 2.3. Do any stars look alike?
+
+(c) Use data source 2 or 3. Create the scatter plot matrix and analyze it. See [2], Section 2.4.
+
+--
+##### TODO: ADD HERE THE DESCRPTION OF EACH OF 3 COLUMNS
+
+
+##### (a) Pick up a dataset which has three variables (from source 2 or 3) and create the bubble plot. Interpret the result. See [2], Section 2.3.
+
+```{r}
+plot(sber$DATE, 
+     sber$CLOSE, 
+     xlab = "Date", 
+     ylab = "SBERBANK stock price",
+     pch = 1)
+with(data = sber, symbols(sber$DATE, sber$CLOSE, circles = sber$VOL, inches = 0.5, add = TRUE))
+```
+Three variables are displayed on this plot above: stock price, date and the volume of trades in each day.
+The volume of trades is represented by circles with radii proportional to its values and centered at the appropriate point of the scatterplot.
+From this chart we can consider that start of March and end of April was very tradable period for this stock, because is this day in stock market sber trades with a huge volumes.
+
+```{r}
+x_var <- sber$CLOSE
+y_var <- imoex$CLOSE
+size_var <- (sber$VOL + imoex$VOL) / 2
+
+df.test_data <- data.frame(x_var, y_var, size_var)
+
+ggplot(data=df.test_data, aes(x=x_var, y=y_var)) +
+  geom_point(aes(size=size_var)) +
+  scale_size_continuous(range=c(0.5, 5)) +
+  theme(legend.position = "none")
+```
+
+##### (b) Use data source 2 or 3. Create the glyph plot of all observations, Section 2.3. Do any stars look alike?
+
+```{r warning=FALSE}
+library(MVA)
+stars(tail(sber))
+```
+The glyph chart is not applicable for this type of dataset. I have been trying to reorganize dataset's with generating new variables, but with no results. The chart above presents glyth plot just for showing form of this plot. This plot is unusable; we can't abserve any new facts. The main idea of this plot is to describe how looks multi-variables for each observation as a n-sided star.
+
+##### (c) Use data source 2 or 3. Create the scatter plot matrix and analyze it. See [2], Section 2.4.
+
+```{r}
+sber_open_atr = sber$CLOSE - sber$OPEN
+sber_low_atr = sber$CLOSE - sber$LOW
+sber_high_atr = sber$CLOSE - sber$HIGH
+
+sber_atrs <- data.frame(sber_open_atr, sber_low_atr, sber_high_atr)
+
+
+round(cor(sber_atrs), 4)
+```
+
+
+```{r}
+pairs(~sber_open_atr + sber_low_atr + sber_high_atr, data=sber_atrs)
+```
+The chart above describes correlation between different sberbank atrs 
+
+
+
+
